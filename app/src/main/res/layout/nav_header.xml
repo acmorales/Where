@@ -9,7 +9,7 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:background="#000000"
+    android:background="@color/colorPrimary"
     android:theme="@style/ThemeOverlay.AppCompat.Dark">
 
     <ImageView
@@ -23,7 +23,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="@dimen/nav_header_vertical_spacing"
-        android:text="Android Studio"
+        android:textSize="16dp"
+        android:text="Where"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1" />
 
     <TextView

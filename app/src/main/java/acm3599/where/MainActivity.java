@@ -13,6 +13,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -42,8 +43,10 @@ import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
-public class MainActivity extends AppCompatActivity implements OnMapReadyCallback, ResultCallback<Status>,
-        NavigationView.OnNavigationItemSelectedListener, AddReminderFragment.OnSubmitCallback {
+public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
+        ResultCallback<Status>, AddReminderFragment.OnSubmitCallback,
+        NavigationView.OnNavigationItemSelectedListener,
+        FragmentManager.OnBackStackChangedListener {
 
     private String TAG = "MainMapActivity";
     private final long ZOOM_LEVEL = (long) 17.5;
@@ -78,6 +81,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         drawer.addDrawerListener(toggle);
         toggle.syncState();
 
+        // sets main activity to listen to fragment back stack changes
+        getSupportFragmentManager().addOnBackStackChangedListener(this);
+
         // set listener for navigation drawer
         NavigationView navView = (NavigationView) findViewById(R.id.nav_drawer);
         navView.setNavigationItemSelectedListener(this);
@@ -103,8 +109,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void submit(Reminder reminder) {
-        Log.d(TAG, "Reminder received: " + reminder);
-
         // closes AddReminderFragment and reattaches mapFrag
         reattachMap();
 
@@ -156,8 +160,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     request,
                     pendingIntent
             ).setResultCallback(this);
-
-            Log.d(TAG, "updating fences");
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
@@ -165,7 +167,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void addReminder() {
-        addReminderBut.setVisibility(View.GONE);
         Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
         Log.d(TAG, "detaching " + f.getTag());
         getSupportFragmentManager().beginTransaction()
@@ -176,7 +177,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void reattachMap() {
-        addReminderBut.setVisibility(View.VISIBLE);
         getSupportFragmentManager().popBackStack();
         getSupportFragmentManager().beginTransaction()
                 .attach(mapFrag)
@@ -184,7 +184,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void viewReminders() {
-        addReminderBut.setVisibility(View.GONE);
         Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
         Log.d(TAG, "detaching " + f.getTag());
         getSupportFragmentManager().beginTransaction()
@@ -205,10 +204,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     Log.d(TAG, "geofence not available");
                     break;
                 case GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES:
-                    Log.d(TAG, "geofence not available");
+                    Log.d(TAG, "too many geofences");
                     break;
                 case GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS:
-                    Log.d(TAG, "geofence not available");
+                    Log.d(TAG, "too many pending intents");
                     break;
             }
         }
@@ -237,7 +236,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public boolean onNavigationItemSelected(MenuItem item) {
         int id = item.getItemId();
-        Log.d(TAG, "menu item clicked");
         switch(id) {
             case R.id.nav_home:
                 reattachMap();
@@ -251,5 +249,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         }
         drawer.closeDrawer(GravityCompat.START);
         return true;
+    }
+
+    @Override
+    public void onBackStackChanged() {
+        Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
+        if(f instanceof SupportMapFragment) {
+            addReminderBut.setVisibility(View.VISIBLE);
+        } else {
+            addReminderBut.setVisibility(View.GONE);
+        }
     }
 }

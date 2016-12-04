@@ -87,6 +87,14 @@ public class ReminderManager {
         return new ArrayList<>(reminders.values());
     }
 
+    public ArrayList<Reminder> getReminders(Geofence geofence) {
+        ArrayList<Reminder> result = new ArrayList<>();
+        for (int i : geofences.get(geofence)) {
+            result.add(reminders.get(i));
+        }
+        return result;
+    }
+
     public int getReminderSize() {
         return reminders.size();
     }

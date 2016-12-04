@@ -136,9 +136,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             gMap.addCircle(new CircleOptions()
                     .center(loc)
                     .radius(30)
-                    .strokeColor(Color.CYAN)
+                    .strokeColor(0xff00796B)
                     .strokeWidth((float) 5)
-                    .fillColor(0x5000ffff));
+                    .fillColor(0x50009688));
 
             gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, ZOOM_LEVEL));
     }
@@ -149,8 +149,10 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 .addGeofence(geofence)
                 .build();
 
-        Intent intent = new Intent(this, GeofenceTransitionService.class);
-        PendingIntent pendingIntent = PendingIntent.getService(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+        Intent intent = new Intent("GeofenceReceiver.class");
+        intent.setClass(this, GeofenceReceiver.class);
+        PendingIntent pendingIntent = PendingIntent.getBroadcast(
+                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -164,11 +166,11 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
+        Log.d(TAG, "registered geofence");
     }
 
     public void addReminder() {
         Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
-        Log.d(TAG, "detaching " + f.getTag());
         getSupportFragmentManager().beginTransaction()
                 .detach(f)
                 .add(R.id.main_fragment, new AddReminderFragment(), "addReminderFrag")
@@ -185,7 +187,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void viewReminders() {
         Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
-        Log.d(TAG, "detaching " + f.getTag());
         getSupportFragmentManager().beginTransaction()
                 .detach(f)
                 .add(R.id.main_fragment, new RemindersFragment(), "remindersFrag")

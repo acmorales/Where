@@ -20,7 +20,6 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
         public CheckBox checkBox;
         public View view;
         public TextView title;
-        public TextView content;
         public TextView location;
 
         public ReminderViewHolder(View v) {
@@ -28,7 +27,6 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
             view = v;
             checkBox = (CheckBox) v.findViewById(R.id.list_checkbox);
             title = (TextView) v.findViewById(R.id.list_title);
-            content = (TextView) v.findViewById(R.id.list_content);
             location = (TextView) v.findViewById(R.id.list_location);
         }
     }
@@ -52,7 +50,6 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
         Reminder r = reminders.get(position);
 
         holder.title.setText(r.getTitle());
-        holder.content.setText(r.getContent());
         holder.location.setText(r.getLocName());
 
         // perhaps set checkbox listener here or s/t

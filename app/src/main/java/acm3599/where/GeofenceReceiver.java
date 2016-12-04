@@ -1,15 +1,15 @@
 package acm3599.where;
 
-import android.app.IntentService;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
-import android.view.View;
 
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
@@ -17,20 +17,21 @@ import com.google.android.gms.location.GeofencingEvent;
 import java.util.List;
 
 /**
- * Created by Andrew on 11/30/2016.
- * Currently unused
+ * Created by Andrew on 12/4/2016.
  */
 
-public class GeofenceTransitionService extends IntentService {
+public class GeofenceReceiver extends BroadcastReceiver {
 
-    String TAG = "TransitionService";
-
-    public GeofenceTransitionService() {
-        super("GeofenceTransitionService");
-    }
+    private String TAG = "GeofenceReceiver";
+    private Context context;
 
     @Override
-    protected void onHandleIntent(Intent intent) {
+    public void onReceive(Context context, Intent intent) {
+        this.context = context;
+
+        Intent broadcastIntent = new Intent();
+        broadcastIntent.addCategory("com.survey.android.geofence.CATEGORY_LOCATION_SERVICES");
+
         Log.d(TAG, "handling transition");
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
         if (geofencingEvent.hasError()) {
@@ -47,29 +48,37 @@ public class GeofenceTransitionService extends IntentService {
             List<Reminder> list;
             for(int i = 0; i < triggeringGeofences.size(); i++) {
                 fence = triggeringGeofences.get(i);
-                list = ReminderManager.getInstance().getReminders();
+                list = ReminderManager.getInstance().getReminders(fence);
                 for(int j = 0; j < list.size(); j++) {
-                    showNotification(list.get(j));
+                    showNotification(list.get(j), (1 * j));
                 }
             }
         }
+
+        broadcastIntent.setAction("com.survey.android.geofence.ACTION_GEOFENCE_TRANSITION");
+        LocalBroadcastManager.getInstance(context).sendBroadcast(broadcastIntent);
     }
 
-    public void showNotification(Reminder reminder) {
-        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+    public void showNotification(Reminder reminder, int tag) {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setContentTitle(reminder.getTitle())
                 .setContentText(reminder.getContent())
                 .setSmallIcon(R.drawable.ic_gps_small)
-                .setLargeIcon(BitmapFactory.decodeResource(getResources(), R.drawable.ic_gps_large));
+                .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_gps_large));
 
-        Intent notifyIntent = new Intent(getApplicationContext(), MainActivity.class);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        Intent notifyIntent = new Intent(context, MainActivity.class);
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(context);
         stackBuilder.addParentStack(MainActivity.class);
         stackBuilder.addNextIntent(notifyIntent);
-        PendingIntent notificationPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        PendingIntent notificationPendingIntent = stackBuilder.getPendingIntent(
+                0, PendingIntent.FLAG_UPDATE_CURRENT);
+
         notificationBuilder.setContentIntent(notificationPendingIntent);
         notificationBuilder.setAutoCancel(true);
-        NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(1, notificationBuilder.build());
+        NotificationManager manager =
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        manager.notify(tag, notificationBuilder.build());
     }
 }

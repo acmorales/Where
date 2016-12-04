@@ -27,6 +27,13 @@
             android:name=".GeofenceTransitionService"
             android:exported="true">
         </service>
+        <receiver
+            android:name=".GeofenceReceiver"
+            android:exported="false" >
+            <intent-filter >
+                <action android:name="com.aol.android.geofence.ACTION_RECEIVE_GEOFENCE"/>
+            </intent-filter>
+        </receiver>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
              (See the file "res/values/google_maps_api.xml").

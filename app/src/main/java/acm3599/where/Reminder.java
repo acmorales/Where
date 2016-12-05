@@ -14,7 +14,6 @@ public class Reminder {
     private boolean active;
     private boolean hasLocation;
     private Place place;
-    private String geoID;
 
     public Reminder(String t, String c, Place p) {
         title = t;
@@ -39,16 +38,8 @@ public class Reminder {
         }
     }
 
-    public String getGeoID() {
-        return geoID;
-    }
-
     public boolean hasLocation() {
         return hasLocation;
-    }
-
-    public Place getPlace() {
-        return place;
     }
 
     public String getLocName() {

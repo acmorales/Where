@@ -20,12 +20,18 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.ArrayAdapter;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.TextView;
 
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Result;
@@ -41,7 +47,10 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         ResultCallback<Status>, AddReminderFragment.OnSubmitCallback,
@@ -131,16 +140,17 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void markReminder(Reminder reminder) {
-            LatLng loc = reminder.getLatLng();
-            gMap.addMarker(new MarkerOptions().position(loc));
-            gMap.addCircle(new CircleOptions()
-                    .center(loc)
-                    .radius(30)
-                    .strokeColor(0xff00796B)
-                    .strokeWidth((float) 5)
-                    .fillColor(0x50009688));
+        LatLng loc = reminder.getLatLng();
+        Marker m = gMap.addMarker(new MarkerOptions().position(loc));
+        m.setTag(reminder.getAddress());
+        gMap.addCircle(new CircleOptions()
+                .center(loc)
+                .radius(30)
+                .strokeColor(0xff00796B)
+                .strokeWidth((float) 5)
+                .fillColor(0x50009688));
 
-            gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, ZOOM_LEVEL));
+        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, ZOOM_LEVEL));
     }
 
     public void updateFences(Geofence geofence) {
@@ -217,6 +227,27 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     @Override
     public void onMapReady(GoogleMap googleMap) {
         gMap = googleMap;
+        gMap.getUiSettings().setZoomGesturesEnabled(true);
+        gMap.setInfoWindowAdapter(new GoogleMap.InfoWindowAdapter() {
+            @Override
+            public View getInfoWindow(Marker marker) {
+                return null;
+            }
+
+            @Override
+            public View getInfoContents(Marker marker) {
+                Log.d(TAG, "info window");
+                View v = getLayoutInflater().inflate(R.layout.info_window, null);
+                RecyclerView rView = (RecyclerView) v.findViewById(R.id.info_list);
+
+                ArrayList<Reminder> list = ReminderManager.getInstance().getReminders();
+                RecyclerView.LayoutManager layout = new LinearLayoutManager(getApplicationContext());
+                InfoAdapter adapter = new InfoAdapter(list);
+                rView.setLayoutManager(layout);
+                rView.setAdapter(adapter);
+                return v;
+            }
+        });
         if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
 

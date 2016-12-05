@@ -18,11 +18,11 @@ import java.util.List;
 
 /**
  * Created by Andrew on 11/30/2016.
- * Currently unused
+ *
  */
 
 public class GeofenceTransitionService extends IntentService {
-
+    // currently unused -- switched to using a broadcastreceiver
     String TAG = "TransitionService";
 
     public GeofenceTransitionService() {

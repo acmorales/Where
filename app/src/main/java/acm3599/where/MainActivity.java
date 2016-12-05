@@ -51,6 +51,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
         ResultCallback<Status>, AddReminderFragment.OnSubmitCallback,
@@ -67,10 +69,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private GoogleMap gMap;
     private SupportMapFragment mapFrag;
 
+    private Map<String, Marker> markers;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // list of markers
+        markers = new HashMap<>();
 
         // sets toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -144,15 +151,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
     public void markReminder(Reminder reminder) {
         LatLng loc = reminder.getLatLng();
-        Marker m = gMap.addMarker(new MarkerOptions().position(loc));
-        m.setTag(reminder.getAddress());
-        gMap.addCircle(new CircleOptions()
-                .center(loc)
-                .radius(30)
-                .strokeColor(0xff00796B)
-                .strokeWidth((float) 5)
-                .fillColor(0x50009688));
-
+        Marker m;
+        if(markers.get(reminder.getAddress()) == null) {
+            m = gMap.addMarker(new MarkerOptions().position(loc));
+            m.setTag(reminder.getAddress());
+            markers.put(reminder.getAddress(), m);
+            gMap.addCircle(new CircleOptions()
+                    .center(loc)
+                    .radius(30)
+                    .strokeColor(0xff00796B)
+                    .strokeWidth((float) 5)
+                    .fillColor(0x50009688));
+        }
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, ZOOM_LEVEL));
     }
 
@@ -243,7 +253,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 View v = getLayoutInflater().inflate(R.layout.info_window, null);
                 RecyclerView rView = (RecyclerView) v.findViewById(R.id.info_list);
 
-                ArrayList<Reminder> list = ReminderManager.getInstance().getReminders();
+
+                marker.getTag();
+                ArrayList<Reminder> list = ReminderManager.getInstance().getReminders((String) marker.getTag());
                 RecyclerView.LayoutManager layout = new LinearLayoutManager(getApplicationContext());
                 InfoAdapter adapter = new InfoAdapter(list);
                 rView.setLayoutManager(layout);

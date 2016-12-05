@@ -48,8 +48,9 @@ public class GeofenceReceiver extends BroadcastReceiver {
             List<Reminder> list;
             for(int i = 0; i < triggeringGeofences.size(); i++) {
                 fence = triggeringGeofences.get(i);
-                list = ReminderManager.getInstance().getReminders(fence);
+                list = ReminderManager.getInstance().getReminders(fence.getRequestId());
                 for(int j = 0; j < list.size(); j++) {
+                    Log.d(TAG, list.get(j).getTitle());
                     showNotification(list.get(j), (1 * j));
                 }
             }
@@ -62,7 +63,7 @@ public class GeofenceReceiver extends BroadcastReceiver {
     public void showNotification(Reminder reminder, int tag) {
         NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
                 .setContentTitle(reminder.getTitle())
-                .setContentText(reminder.getContent())
+                .setContentText(reminder.getLocName())
                 .setSmallIcon(R.drawable.ic_gps_small)
                 .setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_gps_large));
 

@@ -9,6 +9,7 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.maps.model.LatLng;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -25,12 +26,9 @@ public class ReminderManager {
     private GeofencingRequest geoRequest;
     private Context context;
 
-    // the ints in the ArrayList in the geofences Map serves as keys for the reminders Map
-    private Map<Integer, Reminder> reminders;
-    private Map<Geofence, ArrayList<Integer>> geofences;
+    private Map<Geofence, ArrayList<Reminder>> geofences;
 
     private ReminderManager() {
-        reminders = new HashMap<>();
         geofences = new HashMap<>();
     }
 
@@ -44,17 +42,14 @@ public class ReminderManager {
     public Geofence add(Reminder reminder) {
         Geofence fence = null;
         boolean exists = false;
-        int pos = getReminderSize();
-        reminders.put(pos, reminder);
         if(reminder.hasLocation()) {
-            ArrayList<Integer> list;
             for (Geofence g : geofences.keySet()) {
                 if (g.getRequestId().equals(reminder.getAddress())) {
                     // geofence already present
                     fence = g;
-                    list = geofences.get(g);
-                    list.add(pos);
                     exists = true;
+                    ArrayList<Reminder> list = geofences.get(g);
+                    list.add(reminder);
                     Log.d(TAG, "geofence already exists");
                     break;
                 }
@@ -69,34 +64,35 @@ public class ReminderManager {
                         .setExpirationDuration(Geofence.NEVER_EXPIRE)
                         .build();
 
-                list = new ArrayList<>();
-                list.add(pos);
+                ArrayList<Reminder> list = new ArrayList<>();
+                list.add(reminder);
                 geofences.put(fence, list);
                 Log.d(TAG, "geofence created");
             }
         }
         Log.d(TAG, "Reminder added: " + reminder);
-        Log.d(TAG, "Current reminder map");
-        for (int i : reminders.keySet()) {
-            Log.d(TAG, i + " " + reminders.get(i));
-        }
         return fence;
     }
 
     public ArrayList<Reminder> getReminders() {
-        return new ArrayList<>(reminders.values());
-    }
-
-    public ArrayList<Reminder> getReminders(Geofence geofence) {
         ArrayList<Reminder> result = new ArrayList<>();
-        for (int i : geofences.get(geofence)) {
-            result.add(reminders.get(i));
+        for (Geofence g : geofences.keySet()) {
+            for (Reminder r: geofences.get(g)) {
+                result.add(r);
+            }
         }
         return result;
     }
 
-    public int getReminderSize() {
-        return reminders.size();
+    public ArrayList<Reminder> getReminders(String tag) {
+        ArrayList<Reminder> result = new ArrayList<>();
+        for (Geofence g : geofences.keySet()) {
+            if(g.getRequestId().equals(tag)) {
+                result = geofences.get(g);
+                break;
+            }
+        }
+        return result;
     }
 
     public void setContext(Context c) {

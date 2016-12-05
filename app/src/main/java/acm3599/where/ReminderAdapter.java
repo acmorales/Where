@@ -48,23 +48,31 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
 
     @Override
     public void onBindViewHolder(final ReminderViewHolder holder, int position) {
-        Reminder r = reminders.get(position);
+        final Reminder r = reminders.get(position);
 
         holder.title.setText(r.getTitle());
         holder.location.setText(r.getLocName());
-
         holder.checkBox.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(holder.checkBox.isChecked()) {
-                    holder.title.setTextColor(0xff757575);
-                    holder.location.setTextColor(0xff757575);
-                } else {
-                    holder.title.setTextColor(0xff212121);
-                    holder.location.setTextColor(0xff212121);
-                }
+                activate(holder, r);
             }
         });
+    }
+
+    public void activate(ReminderViewHolder holder, Reminder r) {
+        if(holder.checkBox.isChecked()) {
+            changeColor(holder, 0xff757575);
+            r.setActive(false);
+        } else {
+            changeColor(holder, 0xff212121);
+            r.setActive(true);
+        }
+    }
+
+    public void changeColor(ReminderViewHolder holder, int color) {
+        holder.title.setTextColor(color);
+        holder.location.setTextColor(color);
     }
 
     @Override

@@ -33,6 +33,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
 
+import com.google.android.gms.ads.identifier.AdvertisingIdClient;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.Result;
 import com.google.android.gms.common.api.ResultCallback;
@@ -55,20 +56,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity implements OnMapReadyCallback,
-        ResultCallback<Status>, AddReminderFragment.OnSubmitCallback,
+        AddReminderFragment.OnSubmitCallback,
         NavigationView.OnNavigationItemSelectedListener,
         FragmentManager.OnBackStackChangedListener {
 
     private String TAG = "MainMapActivity";
     private final long ZOOM_LEVEL = (long) 17.5;
-    private int currentFrag;
     private DrawerLayout drawer;
     private ActionBarDrawerToggle toggle;
     FloatingActionButton addReminderBut;
     private GoogleApiClient client;
     private GoogleMap gMap;
     private SupportMapFragment mapFrag;
-
+    private InfoAdapter infoAdapter;
     private Map<String, Marker> markers;
 
     @Override
@@ -76,8 +76,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // list of markers
         markers = new HashMap<>();
+        infoAdapter = new InfoAdapter(new ArrayList<Reminder>());
 
         // sets toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -125,11 +125,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void submit(Reminder reminder) {
-        ReminderManager.getInstance().setContext(this);
-        Geofence geofence = ReminderManager.getInstance().add(reminder);
+        ReminderManager rManager = ReminderManager.getInstance();
+        rManager.setContext(this);
+        rManager.add(reminder);
+        infoAdapter.notifyItemInserted(rManager.getSize() - 1);
         if(reminder.hasLocation()) {
             markReminder(reminder);
-            updateFences(geofence);
         }
         close();
     }
@@ -166,37 +167,9 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
         gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, ZOOM_LEVEL));
     }
 
-    public void updateFences(Geofence geofence) {
-        GeofencingRequest request = new GeofencingRequest.Builder()
-                .setInitialTrigger(GeofencingRequest.INITIAL_TRIGGER_ENTER)
-                .addGeofence(geofence)
-                .build();
-
-        Intent intent = new Intent("GeofenceReceiver.class");
-        intent.setClass(this, GeofenceReceiver.class);
-        PendingIntent pendingIntent = PendingIntent.getBroadcast(
-                this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
-
-            LocationServices.GeofencingApi.addGeofences(
-                    client,
-                    request,
-                    pendingIntent
-            ).setResultCallback(this);
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
-        }
-        Log.d(TAG, "registered geofence");
-    }
-
     public void addReminder() {
-        Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
         getSupportFragmentManager().beginTransaction()
-                .detach(f)
-                .add(R.id.main_fragment, new AddReminderFragment(), "addReminderFrag")
+                .replace(R.id.main_fragment, new AddReminderFragment(), "addReminderFrag")
                 .addToBackStack("")
                 .commit();
     }
@@ -204,37 +177,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     public void reattachMap() {
         getSupportFragmentManager().popBackStack();
         getSupportFragmentManager().beginTransaction()
-                .attach(mapFrag)
+                .replace(R.id.main_fragment, mapFrag, "mapFrag")
                 .commit();
     }
 
     public void viewReminders() {
-        Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
         getSupportFragmentManager().beginTransaction()
-                .detach(f)
-                .add(R.id.main_fragment, new RemindersFragment(), "remindersFrag")
+                .replace(R.id.main_fragment, new RemindersFragment(), "remindersFrag")
                 .addToBackStack("")
                 .commit();
-    }
-
-
-    @Override
-    public void onResult(Status status) {
-        if (status.isSuccess()) {
-            Log.d(TAG, "geofence added");
-        } else {
-            switch(status.getStatusCode()) {
-                case GeofenceStatusCodes.GEOFENCE_NOT_AVAILABLE:
-                    Log.d(TAG, "geofence not available");
-                    break;
-                case GeofenceStatusCodes.GEOFENCE_TOO_MANY_GEOFENCES:
-                    Log.d(TAG, "too many geofences");
-                    break;
-                case GeofenceStatusCodes.GEOFENCE_TOO_MANY_PENDING_INTENTS:
-                    Log.d(TAG, "too many pending intents");
-                    break;
-            }
-        }
     }
 
     @Override
@@ -252,14 +203,13 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.d(TAG, "info window");
                 View v = getLayoutInflater().inflate(R.layout.info_window, null);
                 RecyclerView rView = (RecyclerView) v.findViewById(R.id.info_list);
-
-
-                marker.getTag();
                 ArrayList<Reminder> list = ReminderManager.getInstance().getReminders((String) marker.getTag());
+                for (Reminder r : list) {
+                    Log.d(TAG, r.getTitle());
+                }
                 RecyclerView.LayoutManager layout = new LinearLayoutManager(getApplicationContext());
-                InfoAdapter adapter = new InfoAdapter(list);
                 rView.setLayoutManager(layout);
-                rView.setAdapter(adapter);
+                rView.setAdapter(infoAdapter);
                 return v;
             }
         });

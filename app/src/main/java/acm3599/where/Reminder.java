@@ -19,6 +19,7 @@ public class Reminder {
         title = t;
         content = c;
         place = p;
+        active = true;
         if(place == null) {
             hasLocation = false;
         } else {
@@ -38,10 +39,6 @@ public class Reminder {
         }
     }
 
-    public boolean hasLocation() {
-        return hasLocation;
-    }
-
     public String getLocName() {
         return place.getName().toString();
     }
@@ -56,6 +53,22 @@ public class Reminder {
 
     public LatLng getLatLng() {
         return place.getLatLng();
+    }
+
+    public boolean hasLocation() {
+        return hasLocation;
+    }
+
+    public boolean isActive() {
+        return active;
+    }
+
+    public void setActive(boolean b) {
+        active = b;
+    }
+
+    public boolean equals(Reminder r) {
+        return this.getAddress().equals(r.getAddress());
     }
 
     @Override

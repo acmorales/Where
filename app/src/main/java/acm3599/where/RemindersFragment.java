@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,11 +25,28 @@ public class RemindersFragment extends Fragment {
     public void onActivityCreated(Bundle bundle) {
         super.onActivityCreated(bundle);
         rView = (RecyclerView) view.findViewById(R.id.reminder_list);
-        ArrayList<Reminder> list = ReminderManager.getInstance().getReminders();
-        ReminderAdapter adapter = new ReminderAdapter(list);
+        final ArrayList<Reminder> list = ReminderManager.getInstance().getReminders();
+        final ReminderAdapter adapter = new ReminderAdapter(list);
         RecyclerView.LayoutManager layout = new LinearLayoutManager(getContext());
         rView.setLayoutManager(layout);
         rView.setAdapter(adapter);
+        ItemTouchHelper.SimpleCallback simpleItemTouchCallback = new ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            @Override
+            public boolean onMove(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                return false;
+            }
+
+            @Override
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int swipeDir) {
+                if(swipeDir == ItemTouchHelper.RIGHT) {
+                    ReminderManager.getInstance().remove(list.get(viewHolder.getAdapterPosition()));
+                    list.remove(viewHolder.getAdapterPosition());
+                    adapter.notifyItemRemoved(viewHolder.getAdapterPosition());
+                }
+            }
+        };
+        ItemTouchHelper itemTouchHelper = new ItemTouchHelper(simpleItemTouchCallback);
+        itemTouchHelper.attachToRecyclerView(rView);
     }
 
     @Override

@@ -96,6 +96,7 @@ public class ReminderManager {
             for (Reminder r: geofences.get(g)) {
                 if(r.equals(reminder)) {
                     geofences.get(g).remove(r);
+                    break;
                 }
             }
         }

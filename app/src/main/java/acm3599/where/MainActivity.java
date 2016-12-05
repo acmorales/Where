@@ -175,10 +175,15 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void reattachMap() {
-        getSupportFragmentManager().popBackStack();
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.main_fragment, mapFrag, "mapFrag")
-                .commit();
+        Fragment f = getSupportFragmentManager().findFragmentById(R.id.main_fragment);
+        if(!(f instanceof SupportMapFragment)) {
+            getSupportFragmentManager().popBackStack();
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.main_fragment, mapFrag, "mapFrag")
+                    .commit();
+
+            addReminderBut.setVisibility(View.VISIBLE);
+        }
     }
 
     public void viewReminders() {

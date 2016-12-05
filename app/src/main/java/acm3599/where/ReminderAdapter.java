@@ -1,5 +1,6 @@
 package acm3599.where;
 
+import android.graphics.Color;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -46,13 +47,24 @@ public class ReminderAdapter extends RecyclerView.Adapter<ReminderAdapter.Remind
     }
 
     @Override
-    public void onBindViewHolder(ReminderViewHolder holder, int position) {
+    public void onBindViewHolder(final ReminderViewHolder holder, int position) {
         Reminder r = reminders.get(position);
 
         holder.title.setText(r.getTitle());
         holder.location.setText(r.getLocName());
 
-        // perhaps set checkbox listener here or s/t
+        holder.checkBox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(holder.checkBox.isChecked()) {
+                    holder.title.setTextColor(0xff757575);
+                    holder.location.setTextColor(0xff757575);
+                } else {
+                    holder.title.setTextColor(0xff212121);
+                    holder.location.setTextColor(0xff212121);
+                }
+            }
+        });
     }
 
     @Override

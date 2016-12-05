@@ -118,9 +118,19 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void submit(Reminder reminder) {
+        ReminderManager.getInstance().setContext(this);
+        Geofence geofence = ReminderManager.getInstance().add(reminder);
+        if(reminder.hasLocation()) {
+            markReminder(reminder);
+            updateFences(geofence);
+        }
+        close();
+    }
+
+    public void close() {
         // closes AddReminderFragment and reattaches mapFrag
         reattachMap();
-
+        
         // minimizes keyboard
         // found on http://stackoverflow.com/questions/1109022/close-hide-the-android-soft-keyboard
         View view = this.getCurrentFocus();
@@ -129,13 +139,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                     getSystemService(Context.INPUT_METHOD_SERVICE);
 
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-        }
-
-        ReminderManager.getInstance().setContext(this);
-        Geofence geofence = ReminderManager.getInstance().add(reminder);
-        if(reminder.hasLocation()) {
-            markReminder(reminder);
-            updateFences(geofence);
         }
     }
 

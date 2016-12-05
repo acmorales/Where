@@ -23,6 +23,7 @@ public class AddReminderFragment extends Fragment {
 
     public interface OnSubmitCallback {
         public void submit(Reminder reminder);
+        public void close();
     }
 
     private String TAG = "AddReminderFragment";
@@ -34,6 +35,7 @@ public class AddReminderFragment extends Fragment {
     private EditText contentET;
     private EditText locationET;
     private Button submitButton;
+    private Button cancelButton;
 
     @Override
     public void onActivityCreated(Bundle bundle) {
@@ -42,6 +44,7 @@ public class AddReminderFragment extends Fragment {
         contentET = (EditText) view.findViewById(R.id.reminder_content);
         locationET = (EditText) view.findViewById(R.id.reminder_location);
         submitButton = (Button) view.findViewById(R.id.submit_button);
+        cancelButton = (Button) view.findViewById(R.id.cancel_button);
 
         // listens for when user clicks on edit text field
         // from http://stackoverflow.com/questions/2119072/how-to-do-something-after-user-clicks-on-my-edittext
@@ -63,6 +66,12 @@ public class AddReminderFragment extends Fragment {
                 }
                 callback.submit(new Reminder
                         (titleET.getText().toString(), contentET.getText().toString(), reminderLoc));
+            }
+        });
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                callback.close();
             }
         });
     }

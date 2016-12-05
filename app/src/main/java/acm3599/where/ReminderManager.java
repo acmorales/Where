@@ -17,7 +17,13 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.CircleOptions;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -32,15 +38,20 @@ import java.util.Map;
 public class ReminderManager {
 
     private final String TAG = "ReminderManager";
+    private final long ZOOM_LEVEL = (long) 17.5;
     private static ReminderManager manager;
     private Context context;
+    private GoogleMap map;
 
     private Map<Geofence, ArrayList<Reminder>> geofences;
     private int size;
 
+    private Map<Geofence, Marker> markers;
+
     private ReminderManager() {
         geofences = new HashMap<>();
         size = 0;
+        markers = new HashMap<>();
     }
 
     public static ReminderManager getInstance() {
@@ -81,11 +92,12 @@ public class ReminderManager {
 
                 ArrayList<Reminder> list = new ArrayList<>();
                 list.add(reminder);
-                geofences.put(fence, list);
-                Log.d(TAG, "geofence created");
-                updateFences(fence);
                 size++;
+                geofences.put(fence, list);
+                updateFences(fence);
+                Log.d(TAG, "geofence created");
             }
+            markReminder(fence, reminder);
         }
         Log.d(TAG, "Reminder added: " + reminder);
         return fence;
@@ -96,6 +108,11 @@ public class ReminderManager {
             for (Reminder r: geofences.get(g)) {
                 if(r.equals(reminder)) {
                     geofences.get(g).remove(r);
+                    if(geofences.get(g).size() < 1) {
+                        Marker m = markers.get(g);
+                        m.remove();
+                        markers.remove(m);
+                    }
                     break;
                 }
             }
@@ -133,6 +150,10 @@ public class ReminderManager {
             }
         }
         return result;
+    }
+
+    public void setMap(GoogleMap map) {
+        this.map = map;
     }
 
     public void setContext(Context c) {
@@ -182,5 +203,16 @@ public class ReminderManager {
                     new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
         Log.d(TAG, "registered geofence");
+    }
+
+    public void markReminder(Geofence geofence, Reminder reminder) {
+        LatLng loc = reminder.getLatLng();
+        Marker m;
+        if(markers.get(geofence) == null) {
+            m = map.addMarker(new MarkerOptions().position(loc));
+            m.setTag(reminder.getAddress());
+            markers.put(geofence, m);
+        }
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, ZOOM_LEVEL));
     }
 }

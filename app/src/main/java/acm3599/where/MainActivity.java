@@ -64,20 +64,18 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     private final long ZOOM_LEVEL = (long) 17.5;
     private DrawerLayout drawer;
     private ActionBarDrawerToggle toggle;
-    FloatingActionButton addReminderBut;
+    private FloatingActionButton addReminderBut;
+    private ReminderManager rManager;
     private GoogleApiClient client;
     private GoogleMap gMap;
     private SupportMapFragment mapFrag;
-    private InfoAdapter infoAdapter;
-    private Map<String, Marker> markers;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        markers = new HashMap<>();
-        infoAdapter = new InfoAdapter(new ArrayList<Reminder>());
+        rManager = ReminderManager.getInstance();
 
         // sets toolbar
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -125,13 +123,8 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
     }
 
     public void submit(Reminder reminder) {
-        ReminderManager rManager = ReminderManager.getInstance();
         rManager.setContext(this);
         rManager.add(reminder);
-        infoAdapter.notifyItemInserted(rManager.getSize() - 1);
-        if(reminder.hasLocation()) {
-            markReminder(reminder);
-        }
         close();
     }
 
@@ -148,23 +141,6 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
 
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
-    }
-
-    public void markReminder(Reminder reminder) {
-        LatLng loc = reminder.getLatLng();
-        Marker m;
-        if(markers.get(reminder.getAddress()) == null) {
-            m = gMap.addMarker(new MarkerOptions().position(loc));
-            m.setTag(reminder.getAddress());
-            markers.put(reminder.getAddress(), m);
-            gMap.addCircle(new CircleOptions()
-                    .center(loc)
-                    .radius(30)
-                    .strokeColor(0xff00796B)
-                    .strokeWidth((float) 5)
-                    .fillColor(0x50009688));
-        }
-        gMap.moveCamera(CameraUpdateFactory.newLatLngZoom(loc, ZOOM_LEVEL));
     }
 
     public void addReminder() {
@@ -208,11 +184,12 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
                 Log.d(TAG, "info window");
                 View v = getLayoutInflater().inflate(R.layout.info_window, null);
                 RecyclerView rView = (RecyclerView) v.findViewById(R.id.info_list);
-                ArrayList<Reminder> list = ReminderManager.getInstance().getReminders((String) marker.getTag());
+                ArrayList<Reminder> list = rManager.getReminders((String) marker.getTag());
                 for (Reminder r : list) {
                     Log.d(TAG, r.getTitle());
                 }
                 RecyclerView.LayoutManager layout = new LinearLayoutManager(getApplicationContext());
+                InfoAdapter infoAdapter = new InfoAdapter(list);
                 rView.setLayoutManager(layout);
                 rView.setAdapter(infoAdapter);
                 return v;
@@ -233,6 +210,7 @@ public class MainActivity extends AppCompatActivity implements OnMapReadyCallbac
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, 1);
         }
+        rManager.setMap(gMap);
     }
 
     @Override

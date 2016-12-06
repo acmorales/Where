@@ -208,6 +208,7 @@ public class ReminderManager {
     public void markReminder(Geofence geofence, Reminder reminder) {
         LatLng loc = reminder.getLatLng();
         Marker m;
+        Log.d("markers.get(geofence): ", "" + markers.get(geofence));
         if(markers.get(geofence) == null) {
             m = map.addMarker(new MarkerOptions().position(loc));
             m.setTag(reminder.getAddress());

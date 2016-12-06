@@ -108,10 +108,12 @@ public class ReminderManager {
             for (Reminder r: geofences.get(g)) {
                 if(r.equals(reminder)) {
                     geofences.get(g).remove(r);
+                    Log.d("remove", "size: " + geofences.get(g).size());
                     if(geofences.get(g).size() < 1) {
                         Marker m = markers.get(g);
+                        Log.d("remove", m.toString());
                         m.remove();
-                        markers.remove(m);
+                        markers.remove(g);
                     }
                     break;
                 }
@@ -207,9 +209,9 @@ public class ReminderManager {
 
     public void markReminder(Geofence geofence, Reminder reminder) {
         LatLng loc = reminder.getLatLng();
-        Marker m;
-        Log.d("markers.get(geofence): ", "" + markers.get(geofence));
-        if(markers.get(geofence) == null) {
+        Marker m = markers.get(geofence);
+        Log.d("markers.get(geofence)", "" + markers.get(geofence));
+        if(m == null || markers.get(geofence) == null) {
             m = map.addMarker(new MarkerOptions().position(loc));
             m.setTag(reminder.getAddress());
             markers.put(geofence, m);
